@@ -49,7 +49,7 @@ I = squeeze(X(:,:,:,nTimeframe));
 % Binarization
 for nSlice = sliceRange
     img = GetImage(I, nSlice, ax);
-%     imshow(img, 'InitialMagnification', 'fit');
+    % imshow(img, 'InitialMagnification', 'fit');
     % level = threshTool(img)/255;
     % [level,EM] = graythresh(img);
     [level, EM] = GetThresholdingLevel(img, 'ImprovedOtsu');
