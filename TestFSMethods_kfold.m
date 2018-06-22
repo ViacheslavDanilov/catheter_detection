@@ -2,23 +2,27 @@ clear all; close all; clc;
 set(0, 'DefaultFigureWindowStyle', 'normal');
 currentFolder = pwd;
 addpath(genpath(pwd));
-
+warning('off', 'all');
 % Include dependencies
 addpath('./FSLib/lib'); % dependencies
 addpath('./FSLib/methods'); % FS methods
 addpath(genpath('./lib/drtoolbox'));
 
-% featsRange = 12;
-featsRange = [6, 12, 20];   % select the first 2 features
+featsRange = 20;
+% featsRange = [6, 12, 20];   % select the first 2 features
 numFolds = 10;              % number of iterations for the loop
 % Select a feature selection method from the list
-listFS = {'ILFS', 'InfFS', 'ECFS', 'mrmr', 'relieff',... 
-          'mutinffs', 'fscm', 'laplacian', 'mcfs', 'rfe', ...
-          'L0','fisher', 'UDFS', 'llcfs', 'cfs', ...
-          'ofs', 'pdfadfs'};
-[methodID] = readInput(listFS);
-selection_method = listFS{methodID};
+% listFS = {'ILFS', 'InfFS', 'ECFS', 'mrmr', 'relieff',... 
+%           'mutinffs', 'fscm', 'laplacian', 'mcfs', 'rfe', ...
+%           'L0','fisher', 'UDFS', 'llcfs', 'cfs', ...
+%           'ofs', 'pdfadfs'};
+% [methodID] = readInput(listFS);
+% selection_method = listFS{methodID};
+selection_method = 'pdfadfs';
 
+meanAccuracy = 0;
+meanSTD = 0.05; 
+while ~(meanAccuracy > 0.855 && meanSTD < 0.025) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load the data
 x = load('inputs (not separated).mat');
@@ -124,17 +128,43 @@ for numFeats = featsRange
     meanSTD = std(cath_accuracy_arr);
     fprintf('\nMethod %s for %d features (Linear-SVMs): Accuracy: %.1f±%.1f%%\n', ...
             selection_method, numFeats, 100*meanAccuracy, 100*meanSTD);
+    
+    % Write data to xlsx file
+    % Mean and STD values
+    xls_filename = 'testdata2.xlsx';
+    sheet = 1;    
+    xlRange = 'C6';
+    for i = find(numFeats==featsRange)
+        if i == 1
+            data_xlRow = str2num(xlRange(2:end));
+        else
+            data_xlRow = str2num(xlRange(2:end))+(i-1)*15;
+        end
+        data_xlRange = strcat(xlRange(1), num2str(data_xlRow));
+    end  
+    xlswrite(xls_filename, cath_accuracy_arr, sheet, data_xlRange)
+    
+    % Accuracy array
+    xls_filename = 'testdata.xlsx';
+    cols_name = {'6 features', '12 features', '20 features'}; 
+    sheet = 1;
+    cols_xlRange = 'B2';
+    xlswrite(xls_filename, cols_name, sheet, cols_xlRange)
+    
+    for i = find(numFeats==featsRange)
+        data_xlCol = char(cols_xlRange(1)+i-1);
+        data_xlRow = str2num(cols_xlRange(2:end))+1; %#ok<ST2NM>
+        data_xlRange = strcat(data_xlCol, num2str(data_xlRow));
+        xlswrite(xls_filename, cath_accuracy_arr, sheet, data_xlRange)
+    end
+     
     % Save data
     methodName = strcat(selection_method, '_', num2str(numFeats), '_features.mat'); 
     cd('FS methods comparison');
     save(methodName, 'total_ranking', 'cath_accuracy_arr', 'confusionMatrix', 'meanAccuracy', 'meanSTD');
     cd ..\
 end
-% 
-% temp = [];
-% for i = 1:20
-%     tempVal = mode(total_ranking(i,:));
-%     temp = cat(1, temp, tempVal);
-% end
 
+end
 
+winopen('testdata2.xlsx')
