@@ -52,7 +52,7 @@ eval(['a=',method,';']);
 a.feat=numF;
 a.method='classification';
 a.output_rank=1;
-[tr, a]=train(a, dset);
+[~, a]=train(a, dset);
 ranked = a.rank;
 
 

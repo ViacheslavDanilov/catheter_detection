@@ -8,21 +8,22 @@ addpath('./FSLib/lib'); % dependencies
 addpath('./FSLib/methods'); % FS methods
 addpath(genpath('./lib/drtoolbox'));
 
-featsRange = 20;
-% featsRange = [6, 12, 20];   % select the first 2 features
+% featsRange = 20;
+featsRange = [3, 6, 12, 20];   % select the first 2 features
 numFolds = 10;              % number of iterations for the loop
 % Select a feature selection method from the list
-% listFS = {'ILFS', 'InfFS', 'ECFS', 'mrmr', 'relieff',... 
-%           'mutinffs', 'fscm', 'laplacian', 'mcfs', 'rfe', ...
-%           'L0','fisher', 'UDFS', 'llcfs', 'cfs', ...
-%           'ofs', 'pdfadfs'};
-% [methodID] = readInput(listFS);
-% selection_method = listFS{methodID};
-selection_method = 'pdfadfs';
+listFS = {'ILFS', 'InfFS', 'ECFS', 'mrmr', 'relieff',... 
+          'mutinffs', 'fscm', 'laplacian', 'mcfs', 'rfe', ...
+          'L0','fisher', 'UDFS', 'llcfs', 'cfs', ...
+          'bdfs', 'ofs', 'pdfadfs'};
+[methodID] = readInput(listFS);
+selection_method = listFS{methodID};
 
-meanAccuracy = 0;
-meanSTD = 0.05; 
-while ~(meanAccuracy > 0.855 && meanSTD < 0.025) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPORAL TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% selection_method = 'pdfadfs';
+% meanAccuracy = 0;
+% meanSTD = 0.005; 
+% % while ~(meanAccuracy < 0.82 && meanSTD > 0.04) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load the data
 x = load('inputs (not separated).mat');
@@ -36,6 +37,7 @@ for numFeats = featsRange
     total_ranking = [];
     cath_accuracy_arr = [];
     confusionMatrix = {};
+    pTime = [];
     for i = 1:CVO.NumTestSets   
         trainIdx = CVO.training(i);
         testIdx = CVO.test(i);
@@ -48,6 +50,7 @@ for numFeats = featsRange
         numF = size(X_train,2);
 
         % Feature Selection on training data
+        tic;
         switch lower(selection_method)
             case 'ilfs'
                 % Infinite Latent Feature Selection - ICCV 2017
@@ -97,14 +100,18 @@ for numFeats = featsRange
             case 'llcfs'   
                 % Feature Selection and Kernel Learning for Local Learning-Based Clustering
                 ranking = llcfs(X_train);
+            case 'bdfs'
+                ranking = [2; 1; 3; 20; 19; 7; 18; 5; 13; 15; 6; 12; 16; 17; 9; 14; 8; 4; 11; 10];
             case 'ofs'
                 ranking = [14; 18; 1; 2; 17; 10; 12; 19; 3; 7; 4; 11; 8; 20; 16; 13; 6; 9; 5; 15];
             case 'pdfadfs'
-                ranking = [17; 18; 19; 20; 4; 3; 7; 1; 2; 15; 16; 8; 5; 14; 13; 12; 6; 9; 10; 11];
+                ranking = [17; 18; 19; 20; 4; 3; 7; 1; 2; 15; 16; 8; 5; 14; 13; 12; 6; 9; 10; 11];  
             otherwise
                 disp('Unknown method.')
         end
-
+        tempPTime = toc;
+        pTime = cat(1, pTime, tempPTime);
+        
         if size(ranking, 2) ~= 1
             ranking = ranking';
         end
@@ -117,10 +124,23 @@ for numFeats = featsRange
                         'Standardize', true, ...
                         'Verbose', 0);
         [Y_pred, scores] = predict(svmClassifier, X_test(:,ranking(1:numFeats)));
-        tempConfMatrix = confusionmat(Y_test,Y_pred);
+        tempConfMatrix = confusionmat(Y_test, Y_pred);
         cath_accuracy = tempConfMatrix(2,2)/(tempConfMatrix(2,1) + tempConfMatrix(2,2));
         cath_accuracy_arr = cat(1, cath_accuracy_arr, cath_accuracy); 
         confusionMatrix = cat(1, confusionMatrix, tempConfMatrix);
+    end
+    
+    % Find average ranking
+    average_ranking = zeros(size(total_ranking,1), 1);    
+    for k = 1:size(total_ranking,1)
+        tempArray = total_ranking(k,:);
+        mostFreqVal = mode(tempArray, 2);
+        average_ranking(k,1) = mostFreqVal;
+    end
+    
+    if sum(average_ranking) ~= 210
+%         f = msgbox('Possible problems with ranking!', 'Warning');
+        fprintf('Possible problems with ranking!');
     end
     
     % Display the results
@@ -133,17 +153,27 @@ for numFeats = featsRange
     % Mean and STD values
     xls_filename = 'testdata2.xlsx';
     sheet = 1;    
-    xlRange = 'C6';
+    xlRange = 'B2';
+    xlRange_time = 'C2';
+    xlRange_ranking = 'D2';
     for i = find(numFeats==featsRange)
         if i == 1
             data_xlRow = str2num(xlRange(2:end));
+            time_xlRow = str2num(xlRange_time(2:end));
+%             ranking_xlRow = str2num(xlRange_ranking(2:end));
         else
             data_xlRow = str2num(xlRange(2:end))+(i-1)*15;
+            time_xlRow = str2num(xlRange_time(2:end))+(i-1)*10;
+%             ranking_xlRow = str2num(xlRange_ranking(2:end))+(i-1)*10;
         end
         data_xlRange = strcat(xlRange(1), num2str(data_xlRow));
+        time_xlRange = strcat(xlRange_time(1), num2str(time_xlRow));
+%         ranking_xlRange = strcat(xlRange_ranking(1), num2str(ranking_xlRow));
     end  
     xlswrite(xls_filename, cath_accuracy_arr, sheet, data_xlRange)
-    
+    xlswrite(xls_filename, pTime, sheet, time_xlRange)
+    xlswrite(xls_filename, average_ranking, sheet, xlRange_ranking)
+     
     % Accuracy array
     xls_filename = 'testdata.xlsx';
     cols_name = {'6 features', '12 features', '20 features'}; 
@@ -161,10 +191,11 @@ for numFeats = featsRange
     % Save data
     methodName = strcat(selection_method, '_', num2str(numFeats), '_features.mat'); 
     cd('FS methods comparison');
-    save(methodName, 'total_ranking', 'cath_accuracy_arr', 'confusionMatrix', 'meanAccuracy', 'meanSTD');
+    save(methodName, 'total_ranking', 'cath_accuracy_arr', 'pTime', ...
+        'confusionMatrix', 'meanAccuracy', 'meanSTD', 'average_ranking');
     cd ..\
 end
 
-end
+% end
 
 winopen('testdata2.xlsx')

@@ -68,7 +68,7 @@ paramCell = fs_unsup_udfs_build_param(knnCandi, gammaCandi, lamdaCandi);
 %======================================================
 X = double(X);
 
-disp('UDFS: Regularized Discriminative Feature Selection for Unsupervised Learning');
+% disp('UDFS: Regularized Discriminative Feature Selection for Unsupervised Learning');
 param = paramCell{1};
 L = LocalDisAna(X', param);
 A = X'*L*X;

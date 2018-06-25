@@ -31,7 +31,7 @@ function [RANKED, WEIGHT] = infFS( X_train, Y_train, alpha, supervision, verbose
 
 %[4] Roffo, G., 2017. Ranking to Learn and Learning to Rank: On the Role of Ranking in Pattern Recognition Applications. arXiv preprint arXiv:1706.05933.
 %  ------------------------------------------------------------------------
-fprintf('\n+ Feature selection method: inf-FS 2016\n');
+% fprintf('\n+ Feature selection method: inf-FS 2016\n');
 
 if (nargin<3)
     verbose = 0;

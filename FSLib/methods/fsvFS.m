@@ -52,7 +52,7 @@ alpha = 5; % Default
 v = zeros(n,1);
 
 %% Main LOOP
-while (~finished),
+while (~finished)
     loop=loop+1;    
     scale = alpha*exp(-alpha*v);
     
@@ -64,22 +64,22 @@ while (~finished),
     b0 = x(2*n+1)-x(2*n+2);
     vnew=abs(w);
     
-    if (norm(vnew-v,1)<10^(-5)*norm(v,1)),
+    if (norm(vnew-v,1)<10^(-5)*norm(v,1))
         finished=1;
     else
         v=vnew;
-    end;
-    if (loop>2),
+    end
+    if (loop>2)
         finished=1;
-    end;
+    end
     nfeat=length(find(vnew>100*eps));
     
     disp(['Iter ' num2str(loop) ' - feat ' num2str(nfeat)]);
     
-    if nfeat<numF,
+    if nfeat<numF
         finished=1;
-    end;
-end;
+    end
+end
 
 [~, ind] = sort(-abs(w));
 

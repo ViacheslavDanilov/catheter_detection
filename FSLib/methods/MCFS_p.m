@@ -155,7 +155,7 @@ function [FeaIndex,FeaNumCandi] = MCFS_p(fea,FeaNumCandi,options)
 %   Written by Deng Cai (dengcai AT gmail.com)
 %              Chiyuan Zhang (pluskid AT gmail.com)
 %
-fprintf('\n+ Feature selection method: MCFS \n');
+% fprintf('\n+ Feature selection method: MCFS \n');
 [nSmp,mFea] = size(fea);
 FeaNumCandi = unique(FeaNumCandi);
 FeaNumCandi(FeaNumCandi > mFea) = [];
