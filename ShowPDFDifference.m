@@ -73,7 +73,7 @@ if nargin == 6
     hold off;
     legend('Catheter PDF', 'Tissue PDF')
 %     xlabel('Data', 'FontName', 'Times New Roman');
-    xlabel('Standard deviation', 'FontName', 'Times New Roman', 'FontSize', 26);
+    xlabel('Mean intensity', 'FontName', 'Times New Roman', 'FontSize', 26);
 
     ylabel('PDF', 'FontName', 'Times New Roman', 'FontSize', 26);
     set(ax,'FontName','Times New Roman','FontSize', 26);

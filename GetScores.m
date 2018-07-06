@@ -3,15 +3,16 @@ clc; clear;
 addpath('MAT files');
 load('data (not separ.).mat');
 binCounts = 10:2:70;
-% binCounts = 6;
+% binCounts = 10;
 featureCount = size(dataCatheter,2);
-scoresSBFS = zeros(numel(binCounts),featureCount);
+scoresADFS = zeros(numel(binCounts), featureCount);
 for i = 1:numel(binCounts)
-    scoresSBFS(i,1) = binCounts(i);
-    for j = 2:featureCount
+    scoresADFS(i,1) = binCounts(i);
+    for j = 2:featureCount % test all features
+%     for j = 10  % Test only one feautre (use ID of a feature)
         isDiscrete = IsDiscrete(dataCatheter(:,j));
-%         scoresSBFS(i,j) = ShowPDFDifference(dataTissue(:,j), dataCatheter(:,j), binCounts(i), binCounts(i), isDiscrete);
-        scores(i,j) = ShowPDFDifference(dataTissue(:,j), dataCatheter(:,j), binCounts(i), binCounts(i), isDiscrete, 'sPlot');
+        scoresADFS(i,j) = ShowPDFDifference(dataTissue(:,j), dataCatheter(:,j), binCounts(i), binCounts(i), isDiscrete);
+%         scoresADFS(i,j) = ShowPDFDifference(dataTissue(:,j), dataCatheter(:,j), binCounts(i), binCounts(i), isDiscrete, 'sPlot');
         close
     end
 end

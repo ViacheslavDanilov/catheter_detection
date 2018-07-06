@@ -1,15 +1,17 @@
-% clear all; close all; clc;
+clear all; close all; clc;
 set(0, 'DefaultFigureWindowStyle', 'normal');
 currentFolder = pwd;
 addpath(genpath(pwd));
 warning('off', 'all');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Initial Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numFeats = 3;
-numIterations = 20;
+featsRange = 1:1:20; % could be a range or a digit
+numIterations = 10;
 isUseGPU = 1;
 netType = 'cascade';   % 'feed-forward', 'cascade', 'recurrent'
-netSize = 'mid';
+netSize = 'small';
+isSave = 1;
+isVisual = 0;
 
 if isUseGPU == 1
     trainingFunction = 'SCG';
@@ -19,51 +21,55 @@ else
     perfFunction = 'mse';
 end
 
-isVisual = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-listFS = {'ILFS', 'LSFS', 'UDFS', 'MIFS', 'FSCM', 'MCFS', 'OFS', 'PDF ADFS'};
+listFS = {'ILFS', 'INFS', 'ECFS', 'MRMR', 'RFFS', ... 
+          'MIFS', 'FSCM', 'LSFS', 'MCFS', 'UDFS', ... 
+          'CFS', 'BDFS', 'OFS', 'ADFS'};
 [methodID] = readInput(listFS);
-selectedMethod = listFS{methodID};
+selection_method = listFS{methodID};
 
 % Get ranking
-switch selectedMethod
+switch selection_method
     case 'ILFS'
-        xlRange = 'C67:C86';
-    case 'LSFS'
-        xlRange = 'J67:J86';
-    case 'UDFS'
-        xlRange = 'L67:L86';    
+        rankingRange = 'C82:C101';
+    case 'INFS'
+        rankingRange = 'D82:D101';
+    case 'ECFS'
+        rankingRange = 'E82:E101';
+    case 'MRMR'
+        rankingRange = 'F82:F101';
+    case 'RFFS'
+        rankingRange = 'G82:G101';
     case 'MIFS'
-        xlRange = 'H67:H86';
+        rankingRange = 'H82:H101';
     case 'FSCM'
-        xlRange = 'I67:I86';
+        rankingRange = 'I82:I101';
+    case 'LSFS'
+        rankingRange = 'J82:J101';
     case 'MCFS'
-        xlRange = 'K67:K86';
+        rankingRange = 'K82:K101';             
+    case 'UDFS'
+        rankingRange = 'L82:L101';
+    case 'CFS'
+        rankingRange = 'M82:M101';
+    case 'BDFS'
+        rankingRange = 'N82:N101';
     case 'OFS'
-        xlRange = 'O67:O86';    
-    case 'PDF ADFS'
-        xlRange = 'P67:P86';
+        rankingRange = 'O82:O101';
+    case 'ADFS'
+        rankingRange = 'P82:P101';
     otherwise
         disp('Unknown method.')
 end
 
+% Load the data
 dataFile = 'Feature engineering (not separated).xlsm';
 sheet = 'FS comparison (SVM)';
-ranking = xlsread(dataFile, sheet, xlRange);
-
-% Load the data
+ranking = xlsread(dataFile, sheet, rankingRange);    
 x = load('inputs (not separated).mat');
 y = load('targets (not separated).mat');
 X = x.netTrainInputs;
 Y = y.netTrainTargets;
-
-% Get the truncated data set
-x = X(:,ranking(1:numFeats));
-x = RobustNormalization(x, 'std', 1);
-% t = rescale(Y, -1, 1);
-t = Y';
-x = x';
 
 % Choose a training fucntion
 switch trainingFunction
@@ -138,10 +144,25 @@ net.trainParam.epochs = 1000;
 net_accuracy = zeros(numIterations, 1);
 net_perfomance = zeros(numIterations, 1);
 net_processing_time = zeros(numIterations, 1);
-% while mean(net_accuracy) < 0.4838  % To test many times
-    rng(round(rand*10))
-    for k = 1:numIterations
+
+netOutput = {};
+% while mean(net_accuracy) < 0.82  % To test many times
+for numFeats = featsRange        % For 1:20 features testing
+    cath_accuracy_arr = [];
+    confMatrix = {};
+    trainingTime = []; 
+    
+    % Get the truncated data set
+    x = X(:,ranking(1:numFeats));
+    x = RobustNormalization(x, 'std', 1);
+    % t = rescale(Y, -1, 1);
+    t = Y';
+    x = x';
+    
+    for k = 1:numIterations 
+
         tic;
+        net.inputs{1}.size = numFeats; 
         if isUseGPU == 1 
             [net,tr] = train(net, x, t, 'useGPU','yes');
         else
@@ -171,40 +192,69 @@ net_processing_time = zeros(numIterations, 1);
         tAll = t;
 
         % Get the results
-        [~, confMatrix] = confusion(tAll,yAll);
-        confMatrix = confMatrix';
-        cathAccuracy = confMatrix(2,2)/sum(confMatrix(:,2));
+        [~, tempConfMatrix] = confusion(tAll,yAll);
+        tempConfMatrix = tempConfMatrix';
+        cathAccuracy = tempConfMatrix(2,2)/sum(tempConfMatrix(:,2));
         net_accuracy(k,1) = cathAccuracy;
         net_perfomance(k,1) = perform(net,t,y);
         net_processing_time(k,1) = pTime;
+                
+        trainingTime = cat(1, trainingTime, pTime); 
+        confMatrix = cat(1, confMatrix, tempConfMatrix);
+        cath_accuracy_arr = cat(1, cath_accuracy_arr, cathAccuracy);
+
         fprintf('%.d iteration (%s): accuracy = %.2f%%, perfomance = %.3f, time = %.2f sec\n', ...
-                k, selectedMethod, 100*cathAccuracy, perform(net,t,y), pTime);
+                k, selection_method, 100*cathAccuracy, perform(net,t,y), pTime);
     end
-    fprintf('Average accuracy: %.1f±%.1f%%\n', 100*mean(net_accuracy), 100*std(net_accuracy));
-    
+    fprintf('Average accuracy: %.1f±%.1f%%\n', 100*mean(cath_accuracy_arr), 100*std(cath_accuracy_arr));
+       
+    % Writing all results into one variable
+    if size(featsRange, 2) == 1
+        netOutput{1, 1} = cath_accuracy_arr;
+        netOutput{1, 2} = confMatrix;
+        netOutput{1, 3} = net_perfomance;
+        netOutput{1, 4} = trainingTime;    
+    else
+        netOutput{numFeats, 1} = cath_accuracy_arr;
+        netOutput{numFeats, 2} = confMatrix;
+        netOutput{numFeats, 3} = net_perfomance;
+        netOutput{numFeats, 4} = trainingTime;
+    end
+end     % For 1:20 features testing
+
 % end   % To test many times
 
-fprintf('Final accuracy: %.1f±%.1f%%\n', 100*mean(net_accuracy), 100*std(net_accuracy));
-% Save data
-methodName = strcat(selectedMethod, '_', ...
-                    num2str(numFeats), '_features_', ...
-                    netType, '_', ...
-                    netSize, '.mat'); 
-cd('Net methods comparison');
-save(methodName, 'net_accuracy', 'net_perfomance', 'net_processing_time');
-cd ..\
+if isSave == 1
+    netOutputName = strcat(selection_method, '_', num2str(numFeats), '_features.mat'); 
+    cd('Net methods comparison');
+    save(netOutputName, 'netOutput');
+    cd ..\
+end
 
 % Write to XLSX file
-xls_filename = 'testdata3.xlsx';
-tempInfo = mean(net_perfomance);
-tempInfo = cat(1, tempInfo, std(net_perfomance));
-tempInfo = cat(1, tempInfo, 0);
-tempInfo = cat(1, tempInfo, mean(net_processing_time));
-tempInfo = cat(1, tempInfo, std(net_processing_time));
-tempInfo = cat(1, tempInfo, net_accuracy);
-sheet = 1;
-cols_xlRange = 'B2';
-xlswrite(xls_filename, tempInfo, sheet, cols_xlRange);
+
+if size(featsRange, 2) == 1   
+    % Perfomance
+    xlsData = mean(netOutput{1,3});
+    xlsData = cat(1, xlsData, std(netOutput{1,3}));
+    % Zero string
+    xlsData = cat(1, xlsData, 0);
+    % Training time
+    xlsData = cat(1, xlsData, mean(netOutput{1,4}));
+    xlsData = cat(1, xlsData, std(netOutput{1,4}));
+    % Raw accuracy
+    xlsData = cat(1, xlsData, netOutput{1,1});
+    xlswrite('netSingleTest.xlsx', xlsData, 1, 'B2');
+    winopen('netSingleTest.xlsx')
+else
+    xlsData = [];
+    for i = 1:size(netOutput,1)
+        tempAccuracy = mean(netOutput{i, 1}); 
+        xlsData = cat(1, xlsData, tempAccuracy);
+    end
+    xlswrite('netMultipleTest.xlsx', xlsData, 1, 'B2');
+    winopen('netMultipleTest.xlsx')
+end
 
 % Plot Confusion
 if isVisual == 1
@@ -220,4 +270,4 @@ if isVisual == 1
     % figure, plotroc(t,y)
 end
 
-winopen('testdata3.xlsx')
+

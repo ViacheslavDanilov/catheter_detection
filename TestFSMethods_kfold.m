@@ -11,6 +11,7 @@ addpath(genpath('./lib/drtoolbox'));
 % featsRange = 4;                   % Only for 1 feature
 % featsRange = [3, 6, 12, 20];      % Only for 4 features
 featsRange = 1:1:20;
+
 numFolds = 10;              % number of iterations for the loop
 isGetRanking = 0;           % Do not perform calculations (if 0) and using already defined rankings
 isSave = 0;                 % Save main data variables
@@ -18,12 +19,12 @@ isWriteToXLS = 0;           % Write data to xls file
 % Select a feature selection method from the list
 listFS = {'ILFS', 'INFS', 'ECFS', 'MRMR', 'RFFS', ... 
           'MIFS', 'FSCM', 'LSFS', 'MCFS', 'UDFS', ... 
-          'CFS', 'BDFS', 'OFS', 'PDF ADFS'};
+          'CFS', 'BDFS', 'OFS', 'ADFS'};
 [methodID] = readInput(listFS);
 selection_method = listFS{methodID};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPORAL TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% selection_method = 'PDF ADFS';
+% selection_method = 'ADFS';
 % meanAccuracy = 0;
 % meanSTD = 0.005; 
 % % while ~(meanAccuracy < 0.82 && meanSTD > 0.04) 
@@ -94,14 +95,14 @@ for numFeats = featsRange
                     ranking = [2; 1; 3; 20; 19; 7; 18; 5; 13; 15; 6; 12; 16; 17; 9; 14; 8; 4; 11; 10];
                 case 'OFS'
                     ranking = [14; 18; 1; 2; 17; 10; 12; 19; 3; 7; 4; 11; 8; 20; 16; 13; 6; 9; 5; 15];
-                case 'PDF ADFS'
+                case 'ADFS'
                     ranking = [17; 18; 19; 20; 4; 3; 7; 1; 2; 15; 16; 8; 5; 14; 13; 12; 6; 9; 10; 11];  
                 otherwise
                     disp('Unknown method.')
             end
         else
             calcFilename = 'Feature engineering (not separated).xlsm';
-            sheetName = 'FS comparison (SVM) (1)';
+            sheetName = 'FS comparison (SVM)';
             switch selection_method
                 case 'ILFS'
                     rankingRange = 'C82:C101';
@@ -129,7 +130,7 @@ for numFeats = featsRange
                     rankingRange = 'N82:N101';
                 case 'OFS'
                     rankingRange = 'O82:O101';
-                case 'PDF ADFS'
+                case 'ADFS'
                     rankingRange = 'P82:P101';
                 otherwise
                     disp('Unknown method.')
