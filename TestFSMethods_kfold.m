@@ -15,7 +15,7 @@ featsRange = 1:1:20;
 numFolds = 10;              % number of iterations for the loop
 isGetRanking = 0;           % Do not perform calculations (if 0) and using already defined rankings
 isSave = 0;                 % Save main data variables
-isWriteToXLS = 0;           % Write data to xls file
+
 % Select a feature selection method from the list
 listFS = {'ILFS', 'INFS', 'ECFS', 'MRMR', 'RFFS', ... 
           'MIFS', 'FSCM', 'LSFS', 'MCFS', 'UDFS', ... 
@@ -23,12 +23,6 @@ listFS = {'ILFS', 'INFS', 'ECFS', 'MRMR', 'RFFS', ...
 [methodID] = readInput(listFS);
 selection_method = listFS{methodID};
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPORAL TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% selection_method = 'ADFS';
-% meanAccuracy = 0;
-% meanSTD = 0.005; 
-% % while ~(meanAccuracy < 0.82 && meanSTD > 0.04) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load the data
 x = load('inputs (not separated).mat');
 y = load('targets (not separated).mat');
@@ -36,6 +30,7 @@ X = x.netTrainInputs;
 Y = y.netTrainTargets;
 Y = rescale(Y, -1, 1);
 CVO = cvpartition(Y, 'k', numFolds);
+
 svmOutput = {};
 for numFeats = featsRange   
     total_ranking = [];
@@ -86,7 +81,7 @@ for numFeats = featsRange
                     options.nUseEigenfunction = 4;
                     [FeaIndex,~] = MCFS_p(X_train,numF,options);
                     ranking = FeaIndex{1};
-                case 'udfs'
+                case 'UDFS'
                     nClass = 2;
                     ranking = UDFS(X_train, nClass); 
                 case 'CFS'
@@ -105,33 +100,33 @@ for numFeats = featsRange
             sheetName = 'FS comparison (SVM)';
             switch selection_method
                 case 'ILFS'
-                    rankingRange = 'C82:C101';
+                    rankingRange = 'C67:C86';
                 case 'INFS'
-                    rankingRange = 'D82:D101';
+                    rankingRange = 'D67:D86';
                 case 'ECFS'
-                    rankingRange = 'E82:E101';
+                    rankingRange = 'E67:E86';
                 case 'MRMR'
-                    rankingRange = 'F82:F101';
+                    rankingRange = 'F67:F86';
                 case 'RFFS'
-                    rankingRange = 'G82:G101';
+                    rankingRange = 'G67:G86';
                 case 'MIFS'
-                    rankingRange = 'H82:H101';
+                    rankingRange = 'H67:H86';
                 case 'FSCM'
-                    rankingRange = 'I82:I101';
+                    rankingRange = 'I67:I86';
                 case 'LSFS'
-                    rankingRange = 'J82:J101';
+                    rankingRange = 'J67:J86';
                 case 'MCFS'
-                    rankingRange = 'K82:K101';             
+                    rankingRange = 'K67:K86';             
                 case 'UDFS'
-                    rankingRange = 'L82:L101';
+                    rankingRange = 'L67:L86';
                 case 'CFS'
-                    rankingRange = 'M82:M101';
+                    rankingRange = 'M67:M86';
                 case 'BDFS'
-                    rankingRange = 'N82:N101';
+                    rankingRange = 'N67:N86';
                 case 'OFS'
-                    rankingRange = 'O82:O101';
+                    rankingRange = 'O67:O86';
                 case 'ADFS'
-                    rankingRange = 'P82:P101';
+                    rankingRange = 'P67:P86';
                 otherwise
                     disp('Unknown method.')
             end
@@ -180,7 +175,6 @@ for numFeats = featsRange
     end
     
     if sum(average_ranking) ~= 210
-%         f = msgbox('Possible problems with ranking!', 'Warning');
         fprintf('Possible problems with ranking!');
     end
     
@@ -189,30 +183,6 @@ for numFeats = featsRange
     meanSTD = std(cath_accuracy_arr);
     fprintf('\nMethod %s for %d features (Linear-SVMs): accuracy = %.1f±%.1f%%, ranking time = %.2f, training time = %.2f\n', ...
             selection_method, numFeats, 100*meanAccuracy, 100*meanSTD, mean(rankingTime), mean(trainingTime));
-    
-    % Write data to xlsx file
-    % Mean and STD values
-    if isWriteToXLS == 1
-        xls_filename = 'testdata2.xlsx';
-        sheet = 1;    
-        xlRange = 'B2';
-        xlRange_time = 'C2';
-        xlRange_ranking = 'D2';
-        for i = find(numFeats==featsRange)
-            if i == 1
-                data_xlRow = str2num(xlRange(2:end));
-                time_xlRow = str2num(xlRange_time(2:end));
-            else
-                data_xlRow = str2num(xlRange(2:end))+(i-1)*15;
-                time_xlRow = str2num(xlRange_time(2:end))+(i-1)*10;
-            end
-            data_xlRange = strcat(xlRange(1), num2str(data_xlRow));
-            time_xlRange = strcat(xlRange_time(1), num2str(time_xlRow));
-        end  
-        xlswrite(xls_filename, cath_accuracy_arr, sheet, data_xlRange)
-        xlswrite(xls_filename, rankingTime, sheet, time_xlRange)
-        xlswrite(xls_filename, average_ranking, sheet, xlRange_ranking)
-    end
     
     % Save data
     if isSave == 1
@@ -232,7 +202,7 @@ save(svmOutputName, 'svmOutput');
 cd ..\
 
 % Save means and STDs for all features
-xls_filename = 'testdata.xlsx';
+xls_filename = 'svmMultipleTest.xlsx';
 sheet = 1;
 means_xlRange = 'B2';
 stds_xlRange = 'B25';
@@ -249,7 +219,7 @@ xlswrite(xls_filename, featureMeans, sheet, means_xlRange);
 xlswrite(xls_filename, featureSTDs, sheet, stds_xlRange);
 xlswrite(xls_filename, featureTrainingTime, sheet, time_xlRange);
 
-winopen('testdata.xlsx')
+winopen('svmMultipleTest.xlsx')
 
 
 

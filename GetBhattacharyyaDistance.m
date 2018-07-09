@@ -1,4 +1,4 @@
-function d = getBhattacharyyaDistance(X1,X2)
+function d =GetBhattacharyyaDistance(X1,X2)
 % BHATTACHARYYA  Bhattacharyya distance between two Gaussian classes
 %
 % d = bhattacharyya(X1,X2) returns the Bhattacharyya distance between X1 and X2.

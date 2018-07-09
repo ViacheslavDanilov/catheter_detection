@@ -31,33 +31,33 @@ selection_method = listFS{methodID};
 % Get ranking
 switch selection_method
     case 'ILFS'
-        rankingRange = 'C82:C101';
+        rankingRange = 'C67:C86';
     case 'INFS'
-        rankingRange = 'D82:D101';
+        rankingRange = 'D67:D86';
     case 'ECFS'
-        rankingRange = 'E82:E101';
+        rankingRange = 'E67:E86';
     case 'MRMR'
-        rankingRange = 'F82:F101';
+        rankingRange = 'F67:F86';
     case 'RFFS'
-        rankingRange = 'G82:G101';
+        rankingRange = 'G67:G86';
     case 'MIFS'
-        rankingRange = 'H82:H101';
+        rankingRange = 'H67:H86';
     case 'FSCM'
-        rankingRange = 'I82:I101';
+        rankingRange = 'I67:I86';
     case 'LSFS'
-        rankingRange = 'J82:J101';
+        rankingRange = 'J67:J86';
     case 'MCFS'
-        rankingRange = 'K82:K101';             
+        rankingRange = 'K67:K86';             
     case 'UDFS'
-        rankingRange = 'L82:L101';
+        rankingRange = 'L67:L86';
     case 'CFS'
-        rankingRange = 'M82:M101';
+        rankingRange = 'M67:M86';
     case 'BDFS'
-        rankingRange = 'N82:N101';
+        rankingRange = 'N67:N86';
     case 'OFS'
-        rankingRange = 'O82:O101';
+        rankingRange = 'O67:O86';
     case 'ADFS'
-        rankingRange = 'P82:P101';
+        rankingRange = 'P67:P86';
     otherwise
         disp('Unknown method.')
 end
