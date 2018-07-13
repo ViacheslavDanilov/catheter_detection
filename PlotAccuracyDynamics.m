@@ -35,14 +35,6 @@ end
 % DrawPlot(rawFeatureStep, rawAccuracy);   % raw data
 DrawPlot(smoothFeatureStep, interpRawAccuracy);   % interpolated data 
 % DrawPlot(smoothFeatureStep, smoothAccuracy);  % smoothed data
-%%
-% Fitted curve
-if size(rawAccuracy, 2) == 1
-    f = fit(rawFeatureStep, rawAccuracy, 'smoothingspline');
-    plot(f, rawFeatureStep, rawAccuracy);
-    xlim([0 size(rawFeatureStep,1)+1]);
-    ylim([0 1]);
-end
 
 %%
 plot(rawFeatureStep, rawAccuracy, '--', smoothFeatureStep, smoothAccuracy, '-');
@@ -55,7 +47,7 @@ function DrawPlot(xData, yData)
     % Create axes
 %     axes1 = axes('Parent',figure1);
 %     axes1 = axes('ColorOrder',brewermap(14,'Set2'), 'NextPlot','replacechildren');
-    axes1 = axes('ColorOrder',brewermap(14,'Set2'), 'Parent', figure1); 
+    axes1 = axes('ColorOrder', brewermap(14,'*Spectral'), 'Parent', figure1); 
     hold(axes1, 'on');
 
     plot1 = plot(xData, yData*100, 'linewidth', 1.5, 'MarkerSize', 4, 'Parent', axes1);
@@ -86,7 +78,7 @@ function DrawPlot(xData, yData)
     % Uncomment the following line to preserve the X-limits of the axes
     xlim(axes1,[0 xData(end, 1)+1]);
     % Uncomment the following line to preserve the Y-limits of the axes
-    ylim([-10 100]);
+    ylim([-1 100]);
     box(axes1,'on');
     grid(axes1,'on');
     % Set the remaining axes properties
@@ -97,7 +89,7 @@ function DrawPlot(xData, yData)
     set(legend1,'FontSize',textSize,'EdgeColor',[0 0 0],'Location','best');
 
     grid on
-    grid minor
+%     grid minor
     % grid toggles
 %     title('PCHIP Interpolation');
 end

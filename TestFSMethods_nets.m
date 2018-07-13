@@ -5,7 +5,8 @@ addpath(genpath(pwd));
 warning('off', 'all');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Initial Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-featsRange = 1:1:20; % could be a range or a digit
+% featsRange = 1:1:20; % could be a range or a digit
+featsRange = 20; % could be a range or a digit
 numIterations = 10;
 isUseGPU = 1;
 netType = 'cascade';   % 'feed-forward', 'cascade', 'recurrent'

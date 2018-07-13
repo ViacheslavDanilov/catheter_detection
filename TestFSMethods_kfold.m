@@ -8,7 +8,8 @@ addpath('./FSLib/lib'); % dependencies
 addpath('./FSLib/methods'); % FS methods
 addpath(genpath('./lib/drtoolbox'));
 
-% featsRange = 4;                   % Only for 1 feature
+% CHECK STRING 144(used for manual rankings)
+% featsRange = 12;                   % Only for 1 feature
 % featsRange = [3, 6, 12, 20];      % Only for 4 features
 featsRange = 1:1:20;
 
@@ -141,7 +142,7 @@ for numFeats = featsRange
         total_ranking = cat(2, total_ranking, ranking);
         
         % Manual ranking
-        % ranking  = [18;4;14;17;15;6;10;9;12;8;13;16;11;19;5;7;3;20;1;2;];
+        % ranking  = [18;17;4;19;14;15;7;5;3;20;2;1;10;16;12;6;13;9;8;11];
 
         % Train a classifier
         tic;
